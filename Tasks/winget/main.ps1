@@ -172,7 +172,28 @@ function InstallWinGet {
     else {
         Write-Host "Microsoft.Winget.Client is already installed"
     }
+    function Install-Notepad {
+    Write-Host "Checking if Notepad++ is installed..."
+    
+    # Check if Notepad++ is installed
+    $app = winget list --id Notepad++.Notepad++ --exact
+    if ($app -match "Notepad++.Notepad++") {
+        Write-Host "Notepad++ is already installed."
+        return
+    }
 
+    # Install Notepad++ using WinGet
+    Write-Host "Installing Notepad++..."
+    winget install --id Notepad++.Notepad++ --exact --silent --accept-source-agreements --accept-package-agreements
+
+    # Verify installation
+    $app = winget list --id Notepad++.Notepad++ --exact
+    if ($app -match "Notepad++.Notepad++") {
+        Write-Host "Notepad++ installed successfully."
+    } else {
+        Write-Host "Notepad++ installation failed."
+    }
+    }
     # check if the Microsoft.WinGet.Configuration module is installed
     $wingetConfigurationPackage = Get-Module -ListAvailable -Name Microsoft.WinGet.Configuration | Where-Object { $_.Version -ge "1.8.1911" }
     if (!($wingetConfigurationPackage)) {
@@ -245,6 +266,7 @@ function InstallWinGet {
 
 InstallPS7
 InstallWinGet
+Install-Notepad
 
 function AppendToUserScript {
     Param(
