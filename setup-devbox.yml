@@ -1,0 +1,40 @@
+name: Configure Dev Box Name
+
+on:
+  workflow_dispatch:
+
+jobs:
+  configure-devbox:
+    runs-on: windows-latest
+
+    steps:
+      - name: Get Serial Number
+        id: get_serial
+        run: |
+          $serial = (Get-WmiObject Win32_BIOS).SerialNumber
+          echo "SERIAL=$serial" | Out-File -FilePath $env:GITHUB_ENV -Append
+        shell: pwsh
+
+      - name: Generate Unattended XML
+        run: |
+          $xmlContent = @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <unattend xmlns="urn:schemas-microsoft-com:unattend">
+              <settings pass="specialize">
+                  <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                      <ComputerName>DIDEV-$env:SERIAL</ComputerName>
+                  </component>
+              </settings>
+          </unattend>
+          "@
+          $xmlContent | Out-File -FilePath "C:\Unattend.xml" -Encoding utf8
+        shell: pwsh
+
+      - name: Apply Unattended XML
+        run: |
+          Move-Item -Path "C:\Unattend.xml" -Destination "C:\Windows\Panther\Unattend.xml" -Force
+        shell: pwsh
+
+      - name: Restart Dev Box
+        run: Restart-Computer -Force
+        shell: pwsh
